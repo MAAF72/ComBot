@@ -16,7 +16,7 @@ bot.auto_increment = 1
 
 def generate_contest_embed(contest):
     problem_value = '\n'.join('- [{}](https://tlx.toki.id/problems/{})'.format(contest.problems[p]['name'], p) for p in contest.problems.keys())
-    durasi_value = '{} menit \n ({} - {})'.format(contest.duration, datetime.fromtimestamp(contest.start).strftime('%d %B %Y %H:%M'), datetime.fromtimestamp(contest.end).strftime('%d %B %Y %H:%M'))
+    durasi_value = '{} menit \n ({} - {})'.format(contest.duration, datetime.fromtimestamp(contest.start, timezone('Asia/Jakarta')).strftime('%d %B %Y %H:%M'), datetime.fromtimestamp(contest.end, timezone('Asia/Jakarta')).strftime('%d %B %Y %H:%M'))
     
     embed = discord.Embed(title=' ', color=0x1174df)
     embed.set_author(name='{} #{}'.format(contest.name, contest.id))

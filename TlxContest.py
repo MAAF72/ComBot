@@ -1,6 +1,5 @@
 import discord
 import requests
-from pytz import timezone
 from requests import get
 from copy import deepcopy
 from datetime import datetime
@@ -22,7 +21,7 @@ class TlxContest:
         self.is_crawling = False
     
     def is_over(self):
-        if self.start != None and datetime.timestamp(datetime.now(timezone('Asia/Jakarta'))) > self.end:
+        if self.start != None and datetime.timestamp(datetime.now()) > self.end:
             return True
         return False
     
@@ -143,7 +142,7 @@ class TlxContest:
         for tlx_username in list(self.players.values()):
             self.scoreboard[tlx_username] = deepcopy(self.dummy_score)
             
-        self.start = int(datetime.timestamp(datetime.now(timezone('Asia/Jakarta'))))
+        self.start = int(datetime.timestamp(datetime.now()))
         self.end = self.start + self.duration * 60
         
         #get latestSubmission for every problem  

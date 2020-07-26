@@ -194,7 +194,6 @@ class TlxContest:
             print('crawling', slug)
             self.crawl(slug)
         
-        print(self.submissions)
         print(self.scoreboard)
         self.is_crawling = False    
         return 'OK'

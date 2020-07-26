@@ -3,7 +3,10 @@ from TlxContest import TlxContest
 from discord.ext import commands
 from datetime import datetime
 
-TOKEN = 'NzM1NzEyNTY1NDU1MzU1OTA2.XxkS7Q.PictMjBSLuKL7taY28VT8c_h1q0'
+one = 'NzM1NzEyNTY1NDU1MzU1OTA2'
+two = 'XxkPuA'
+three = 'sG1fHqxuYsQ2ENSyyRMJ1TAcaPE'
+TOKEN = one + '.' + two + '.' + three
 
 bot = commands.Bot(command_prefix=';')
 

@@ -27,14 +27,14 @@ class TlxContest:
     
     def set_duration(self, duration):
         if self.start != None:
-            return 'Tidak bisa mengatur durasi kontes yang sedang berlangsung'
+            return 'Tidak bisa mengatur ulang durasi kontes setelah dimulai'
             
         self.duration = duration
         return 'OK'
     
     def add_duration(self, duration):
         if self.is_over():
-            return 'Tidak bisa memperpanjang durasi kontes yang sudah selesai'
+            return 'Kontes sudah selesai'
             
         self.duration += duration
         self.end += duration * 60
@@ -44,9 +44,9 @@ class TlxContest:
         if slug in self.problems:
             return 'Problem sudah ditambahkan pada kontes ini'
         if self.start != None:
-            return 'Tidak bisa menambahkan problem ke kontes yang sedang berlangsung'
+            return 'Tidak bisa menambahkan problem setelah kontes dimulai'
         if self.is_over():
-            return 'Tidak bisa menambahkan problem ke kontes yang sudah selesai'
+            return 'Kontes sudah selesai'
 
         contest_slug, problem_alias = slug.split('/')
         json_contest = get('https://jerahmeel.tlx.toki.id/api/v2/problemsets/slug/{}'.format(contest_slug)).json()
@@ -71,7 +71,7 @@ class TlxContest:
         if slug not in self.problems:
             return 'Problem tidak ditemukan pada kontes ini'
         if self.start != None:
-            return 'Tidak bisa menghapus problem dari kontes yang sedang berlangsung'
+            return 'Tidak bisa menghapus problem setelah kontes dimulai'
             
         del self.problems[slug]
         return 'OK'
@@ -115,17 +115,16 @@ class TlxContest:
                 user_scoreboard['totalTime'] += (curr['time'] // 1000) - self.start - user_scoreboard[slug]['time'] 
                 user_scoreboard[slug]['score'] = curr['score']
                 user_scoreboard[slug]['time'] = (curr['time'] // 1000) - self.start
-                
-            print('Submission {} : timestamp : {}, start : {}'.format(curr['id'], curr['time'], self.start))
+
             self.problems[slug]['latestSubmission'] = curr['id']
         
     def start_contest(self):
         if self.start != None:
-            return 'Tidak bisa memulai kontes yang sudah berlangsung'
+            return 'Kontes sudah dimulai'
         if len(self.problems) == 0:
-            return 'Tolong tambahkan problem terlebih dahulu sebelum memulai kontes'
+            return 'Problem belum diatur'
         if self.duration <= 0:
-            return 'Tolong atur durasi sebelum memulai kontes'
+            return 'Durasi kontes belum diatur'
         
         # Create dummy_score
         self.dummy_score = {
@@ -152,20 +151,18 @@ class TlxContest:
             json_submission = get(url).json()
             if len(json_submission['data']['page']) > 0:
                 self.problems[slug]['latestSubmission'] = json_submission['data']['page'][0]['id']
-        print('start', self.start)
-        print('end', self.end)
         return 'OK'
         
     def add_player(self, user, tlx_username):
         if user in self.players:
-            return '{} ({}) sudah terdaftar pada kontes {} #{}'.format(user.mention, self.players[user], self.name, self.id)
+            return 'Sudah terdaftar sebagai'.format(self.players[user])
         if self.is_over():
-            return 'Tidak bisa menambahkan player baru ke kontes yang sudah selesai'
+            return 'Kontes sudah selesai'
 
         json_user = get('https://jerahmeel.tlx.toki.id/api/v2/user-stats?username={}'.format(tlx_username)).json()
         
         if 'errorCode' in json_user:
-            return 'Akun TLX {} tidak dapat ditemukan {}'.format(tlx_username, user.mention)
+            return 'Akun TLX {} tidak dapat ditemukan'.format(tlx_username)
         
         # Join di tengah2, masukkan datanya juga ke scores dan submission agar bisa kedetect pas crawling
         self.players[user] = tlx_username
@@ -176,11 +173,11 @@ class TlxContest:
     
     def del_player(self, user):
         if user not in self.players:
-            return '{} tidak terdaftar pada kontes {} #{}'.format(user.mention, self.name, self.id)
+            return 'Tidak terdaftar pada kontes'
         if self.start != None:
-            return 'Tidak bisa mengeluarkan player dari kontes yang sedang berlangsung'
+            return 'Tidak bisa mengundurkan diri setelah kontes dimulai'
         if self.is_over():
-            return 'Tidak bisa mengeluarkan player dari kontes yang sudah selesai'
+            return 'Kontes sudah selesai'
         
         del self.players[user]
         return 'OK'
@@ -191,9 +188,7 @@ class TlxContest:
 
         self.is_crawling = True
         for slug in self.problems.keys():
-            print('crawling', slug)
             self.crawl(slug)
         
-        print(self.scoreboard)
         self.is_crawling = False    
         return 'OK'

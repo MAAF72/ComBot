@@ -1,12 +1,9 @@
-import os
 import discord
 from TlxContest import TlxContest
-from dotenv import load_dotenv
 from discord.ext import commands
 from datetime import datetime
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = 'NzM1NzEyNTY1NDU1MzU1OTA2.XxkS7Q.PictMjBSLuKL7taY28VT8c_h1q0'
 
 bot = commands.Bot(command_prefix=';')
 

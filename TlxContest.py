@@ -1,5 +1,6 @@
 import discord
 import requests
+from pytz import timezone
 from requests import get
 from copy import deepcopy
 from datetime import datetime
@@ -13,17 +14,15 @@ class TlxContest:
         self.problems = dict()
         self.players = dict()
         self.duration = 0
-        self.penalty = 0
         self.start = None
         self.end = None
-        self.submissions = set()
         self.scoreboard = dict()
         self.dummy_score = dict()
         self.procs = []
         self.is_crawling = False
     
     def is_over(self):
-        if self.start != None and datetime.timestamp(datetime.now()) > self.end:
+        if self.start != None and datetime.timestamp(datetime.now(timezone('Asia/Jakarta'))) > self.end:
             return True
         return False
     
@@ -81,39 +80,45 @@ class TlxContest:
     def crawl(self, slug):
         finish = False
         page = 1
-        curr = -1
-        latest = self.problems[slug]['latestSubmission']
         jid = self.problems[slug]['jid']
         found_pending = False
+        stack = []
         while not finish:
             url = 'https://jerahmeel.tlx.toki.id/api/v2/submissions/programming?page={}&problemJid={}'.format(page, jid)
             json_submission = get(url).json()
             if len(json_submission['data']['page']) > 0:
-                curr = max(curr, json_submission['data']['page'][0]['id'])
                 for i in json_submission['data']['page']:
-                    if i['id'] == latest:
+                    if i['id'] == self.problems[slug]['latestSubmission']:
                         finish = True
                         break
                     
                     tlx_username = json_submission['profilesMap'][i['userJid']]['username']
+                    
                     if tlx_username in self.players.values():
-                        if i['id'] not in self.submissions:
-                            if i['latestGrading']['verdict']['code'] != '?':
-                                self.submissions.add(i['id'])
-                                user_scoreboard = self.scoreboard[tlx_username]
-                                if user_scoreboard[slug]['score'] != 100:
-                                    user_scoreboard['totalScore'] += i['latestGrading']['score'] - user_scoreboard[slug]['score'] # update total score
-                                    user_scoreboard[slug]['score'] = max(user_scoreboard[slug]['score'], i['latestGrading']['score']) # update latest score
-                                    if i['latestGrading']['score'] == 100:
-                                        user_scoreboard[slug]['time'] = (i['time'] // 1000) - self.start  # API in ms, so convert it to s
-                                        user_scoreboard['totalTime'] += user_scoreboard[slug]['time'] + user_scoreboard[slug]['penalty'] # in s
-                                    else:
-                                        user_scoreboard[slug]['penalty'] += self.penalty * 60 # in s
-                            else:
-                                found_pending = True
+                        stack.append({
+                            'id': i['id'],
+                            'verdict': i['latestGrading']['verdict']['code'],
+                            'score': i['latestGrading']['score'],
+                            'time': i['time'],
+                            'username': tlx_username
+                        })
                 page += 1
-                if not found_pending:
-                    self.problems[slug]['latestSubmission'] = curr # restart aja semisal nemu pending, soalnya bisa aja pendingnya ada di tengah2, malah bingung nanti
+                
+        # Process stack
+        while stack:
+            curr = stack.pop()
+            if curr['verdict'] == '?':
+                break
+            
+            user_scoreboard = self.scoreboard[curr['username']]
+            if curr['score'] > user_scoreboard[slug]['score']:
+                user_scoreboard['totalScore'] += curr['score'] - user_scoreboard[slug]['score']
+                user_scoreboard['totalTime'] += (curr['time'] // 1000) - self.start - user_scoreboard[slug]['time'] 
+                user_scoreboard[slug]['score'] = curr['score']
+                user_scoreboard[slug]['time'] = (curr['time'] // 1000) - self.start
+                
+            print('Submission {} : timestamp : {}, start : {}'.format(curr['id'], curr['time'], self.start))
+            self.problems[slug]['latestSubmission'] = curr['id']
         
     def start_contest(self):
         if self.start != None:
@@ -126,20 +131,19 @@ class TlxContest:
         # Create dummy_score
         self.dummy_score = {
             'totalScore': 0,
-            'totalTime': 0
+            'totalTime': 0,
         }
         for slug in self.problems.keys():
             self.dummy_score[slug] = {
                 'score': 0,
                 'time': 0,
-                'penalty': 0
             }
 
         # Register players biar bisa dicrawl
         for tlx_username in list(self.players.values()):
             self.scoreboard[tlx_username] = deepcopy(self.dummy_score)
             
-        self.start = int(datetime.timestamp(datetime.now()))
+        self.start = int(datetime.timestamp(datetime.now(timezone('Asia/Jakarta'))))
         self.end = self.start + self.duration * 60
         
         #get latestSubmission for every problem  
@@ -149,7 +153,8 @@ class TlxContest:
             json_submission = get(url).json()
             if len(json_submission['data']['page']) > 0:
                 self.problems[slug]['latestSubmission'] = json_submission['data']['page'][0]['id']
-
+        print('start', self.start)
+        print('end', self.end)
         return 'OK'
         
     def add_player(self, user, tlx_username):

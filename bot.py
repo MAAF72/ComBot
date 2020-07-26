@@ -1,4 +1,5 @@
 import discord
+from pytz import timezone
 from TlxContest import TlxContest
 from discord.ext import commands
 from datetime import datetime
@@ -25,7 +26,7 @@ def generate_contest_embed(contest):
     if contest.is_over():
         embed.set_footer(text='Kontes sudah selesai')
     else:
-        embed.set_footer(text='Kontes akan selesai dalam {} menit, happy coding!'.format((contest.end - int(datetime.timestamp(datetime.now()))) // 60))
+        embed.set_footer(text='Kontes akan selesai dalam {} menit, happy coding!'.format((contest.end - int(datetime.timestamp(datetime.now(timezone('Asia/Jakarta'))))) // 60))
 
     return embed
 
@@ -48,7 +49,7 @@ def generate_scoreboard_embed(contest):
     if contest.is_over():
         embed.set_footer(text='Kontes sudah selesai')
     else:
-        embed.set_footer(text='Kontes akan selesai dalam {} menit, happy coding!'.format((contest.end - int(datetime.timestamp(datetime.now()))) // 60))
+        embed.set_footer(text='Kontes akan selesai dalam {} menit, happy coding!'.format((contest.end - int(datetime.timestamp(datetime.now(timezone('Asia/Jakarta'))))) // 60))
 
     return embed
     

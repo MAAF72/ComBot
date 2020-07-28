@@ -1,5 +1,6 @@
 import discord
 import requests
+from time import time
 from requests import get
 from copy import deepcopy
 from datetime import datetime
@@ -187,8 +188,9 @@ class TlxContest:
             return 'Mohon tunggu, proses sebelumnya belum selesai...'
 
         self.is_crawling = True
+        start_time = time()
         for slug in self.problems.keys():
             self.crawl(slug)
-        
+        print('Successfully crawling {} problem(s) in {:.2f}s'.format(len(self.problems), time() - start_time))
         self.is_crawling = False    
         return 'OK'

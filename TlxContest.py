@@ -2,10 +2,10 @@ from time import time
 from copy import deepcopy
 from datetime import datetime
 from requests import get
-import discord
+from discord.member import Member
 
 class TlxContest:
-    def __init__(self, ID: int, name: str, admin: discord.member.Member):
+    def __init__(self, ID: int, name: str, admin: Member):
         self.ID = ID
         self.name = name
         self.admin = admin

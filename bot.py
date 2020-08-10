@@ -1,6 +1,7 @@
 from datetime import datetime
 from pytz import timezone
-import discord
+from Embeds import Embed
+from discord.ext import commands
 from TlxContest import TlxContest
 
 
@@ -17,7 +18,7 @@ COLOR = {
     'success': 0x28A745
 }
 
-bot = discord.ext.commands.Bot(command_prefix=';')
+bot = commands.Bot(command_prefix=';')
 
 bot.tlx_contests = dict()
 bot.auto_increment = 1
@@ -37,7 +38,7 @@ def generate_contest_embed(contest, sender):
         if contest.start is not None:
             durasi_value += '\n ({} - {})'.format(datetime.fromtimestamp(contest.start, timezone('Asia/Jakarta')).strftime('%d %B %Y %H:%M'), datetime.fromtimestamp(contest.end, timezone('Asia/Jakarta')).strftime('%d %B %Y %H:%M'))
 
-    embed = discord.Embed(title=' ', description='Author: {} | Contest ID: {}'.format(contest.admin.mention, contest.ID), color=COLOR['info'])
+    embed = Embed(title=' ', description='Author: {} | Contest ID: {}'.format(contest.admin.mention, contest.ID), color=COLOR['info'])
     embed.set_author(name=contest.name)
 
     embed.add_field(name='Problem', value=problem_value, inline=True)
@@ -64,7 +65,7 @@ def generate_scoreboard_embed(contest):
                 score_value += '`{}`  `{}`\n'.format(item[1]['totalScore'], item[1]['totalTime'] // 60)
                 break
 
-    embed = discord.Embed(title=' ', description='Author: {} | Contest ID: {}'.format(contest.admin.mention, contest.ID), color=COLOR['info'])
+    embed = Embed(title=' ', description='Author: {} | Contest ID: {}'.format(contest.admin.mention, contest.ID), color=COLOR['info'])
     embed.set_author(name='Scoreboard {}'.format(contest.name))
     embed.add_field(name='Rank', value=rank_value, inline=True)
     embed.add_field(name='Score', value=score_value, inline=True)
@@ -77,7 +78,7 @@ def generate_scoreboard_embed(contest):
     return embed
 
 async def embed_message(ctx, message, level):
-    return await ctx.send(embed=discord.Embed(description='{} {}'.format(message, ctx.message.author.mention), color=COLOR[level]))
+    return await ctx.send(embed=Embed(description='{} {}'.format(message, ctx.message.author.mention), color=COLOR[level]))
 
 @bot.event
 async def on_ready():
@@ -267,13 +268,13 @@ async def tlx_scoreboard(ctx, contest_id: int):
 
 @bot.event
 async def on_command_error(ctx, error):
-    if isinstance(error, discord.ext.commands.CheckFailure):
+    if isinstance(error, commands.CheckFailure):
         await embed_message(ctx, 'You do not have the correct role for this command.', 'danger')
-    elif isinstance(error, discord.ext.commands.CommandInvokeError):
+    elif isinstance(error, commands.CommandInvokeError):
         await embed_message(ctx, 'Internal Error', 'danger')
         print(type(error))
         print(error.original)
-        embed = discord.Embed(title='ComBot Command Error', color=COLOR['danger'])
+        embed = Embed(title='ComBot Command Error', color=COLOR['danger'])
         embed.add_field(name='Guild', value=ctx.guild, inline=True)
         embed.add_field(name='Channel', value=ctx.channel, inline=True)
         embed.add_field(name='User', value=ctx.author, inline=True)
